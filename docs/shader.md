@@ -16,7 +16,7 @@
 | `optics` | refraction | chromatic aberration | saturation | highlight |
 | `finish` | opacity | unused | unused | unused |
 
-All lengths are in points. The capture and mapping rows are in `sourceView` coordinates. Touch and shape are in the glass's own coordinates.
+All lengths are in points. The capture and mapping rows are in the source view's coordinates (`sourceView`, or the superview). Touch and shape are in the glass's own coordinates.
 
 ## Vertex stage
 

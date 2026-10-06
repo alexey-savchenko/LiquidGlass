@@ -27,7 +27,7 @@ Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/alexey-savchenko/LiquidGlass.git", from: "1.1.0")
+    .package(url: "https://github.com/alexey-savchenko/LiquidGlass.git", from: "1.2.0")
 ]
 ```
 
@@ -40,20 +40,19 @@ import LiquidGlass
 
 let glass = LiquidGlassView()
 glass.style.shape = .capsule
-glass.sourceView = collectionView      // the view whose content sits behind the glass
-glass.backdrop = .live                 // the collection view scrolls
+glass.backdrop = .live                 // the content behind scrolls
 
 let label = UILabel()
 label.text = "Hold me"
 glass.contentView.addSubview(label)    // put labels and icons in contentView
 
 glass.addAction(UIAction { _ in print("tapped") }, for: .primaryActionTriggered)
-view.addSubview(glass)                 // a sibling above collectionView, not a subview of it
+view.addSubview(glass)                 // above the content it should refract
 ```
 
 Two rules matter.
 
-1. `sourceView` is what the glass refracts. Put the glass above it in the view hierarchy, usually as a sibling. The glass hides itself while it captures, so it never sees its own output.
+1. The glass refracts whatever is behind it in its superview. While it captures, it hides itself and every view stacked above it, so it never sees its own output or the views on top of it. To refract a different view, set `sourceView`.
 2. Choose the backdrop to match the content. Use `.live` when the content behind moves. Use `.static` when it does not, and call `setNeedsBackdropUpdate()` after you change that content.
 
 ## Configuration
@@ -88,7 +87,7 @@ glass.style = style
 |---|---|
 | `LiquidGlassView` | `UIControl` subclass. Sends `.primaryActionTriggered` on touch up inside. |
 | `contentView` | Container for your labels and icons, drawn above the glass |
-| `sourceView` | Weak reference to the view being refracted |
+| `sourceView` | Optional weak reference to the view to refract. When `nil` (the default), the glass refracts its superview. |
 | `style` | The `LiquidGlassStyle` in use. Setting it re-renders. |
 | `backdrop` | `.live` or `.static` (the default) |
 | `setNeedsBackdropUpdate()` | Re-capture on the next frame in static mode |
@@ -101,7 +100,7 @@ glass.style = style
 
 Every frame that needs drawing goes through the same steps.
 
-1. Hide the glass and render `sourceView` into a GPU-shared pixel buffer with `layer.render(in:)`. Only the region under the glass is drawn, plus a margin for the refraction.
+1. Hide the glass and the views above it, then render the source (the superview, or `sourceView` if set) into a GPU-shared pixel buffer with `layer.render(in:)`. Only the region under the glass is drawn, plus a margin for the refraction.
 2. Blur the result with Metal Performance Shaders.
 3. Draw one fragment pass. It computes the shape's distance field, refracts the rim, applies the press bulge, tint, saturation, rim light and touch glow, and anti-aliases the edge.
 
@@ -114,7 +113,8 @@ Details are in [docs/architecture.md](docs/architecture.md) and [docs/shader.md]
 - `layer.render(in:)` draws the model layer tree. It cannot capture `UIVisualEffectView` blurs, `AVPlayerLayer` video, other Metal or `CAMetalLayer` content (including other glass views), or animations in flight. These show as blank or frozen under the glass.
 - Live mode captures on the main thread every frame. Keep live glass views small and few, and profile on a device. The `LiquidGlass` signpost category marks each capture and encode interval in Instruments.
 - In static mode, a glass that moves without resizing keeps its old capture until you call `setNeedsBackdropUpdate()`.
-- The shader assumes an opaque backdrop. Transparent areas of `sourceView` darken under the glass.
+- The shader assumes an opaque backdrop. Transparent areas of the source darken under the glass.
+- With the superview as the source, each capture walks the superview's whole layer tree. Only the area under the glass is drawn, but a superview with many layers costs more. Set `sourceView` to a smaller view to narrow it.
 
 ## Testing
 
@@ -122,7 +122,7 @@ Details are in [docs/architecture.md](docs/architecture.md) and [docs/shader.md]
 xcodebuild -scheme LiquidGlass -destination 'platform=iOS Simulator,name=iPhone 16' test
 ```
 
-The tests cover spring settling and overshoot, the capture rectangle (margin, clipping, transforms, scroll offset), when the render loop runs, and the uniform buffer layout. The layout test checks the Swift struct against the compiled shader through pipeline reflection.
+The tests cover spring settling and overshoot, the capture rectangle (margin, clipping, transforms, scroll offset), the superview fallback and which views are hidden during capture, when the render loop runs, and the uniform buffer layout. The layout test checks the Swift struct against the compiled shader through pipeline reflection.
 
 ## License
 

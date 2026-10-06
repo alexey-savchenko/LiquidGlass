@@ -69,7 +69,6 @@ final class DemoViewController: UIViewController {
         configure(circle, shape: .circle, size: CGSize(width: 88, height: 88), below: card.bottomAnchor, content: Self.makeIcon("sparkles"))
         button.addAction(UIAction { _ in print("Glass button tapped") }, for: .primaryActionTriggered)
 
-        glassViews.forEach { $0.sourceView = collectionView }
         applyBackdrop()
     }
 

@@ -133,7 +133,7 @@ final class LiquidGlassRenderer {
 
     /// `rect` is in `source.bounds` coordinates and must already be snapped to the pixel grid.
     @discardableResult
-    func capture(_ source: UIView, rect: CGRect, scale: CGFloat, blurRadius: CGFloat, hiding glass: UIView) -> Bool {
+    func capture(_ source: UIView, rect: CGRect, scale: CGFloat, blurRadius: CGFloat, hiding views: [UIView]) -> Bool {
         let width = Int((rect.width * scale).rounded())
         let height = Int((rect.height * scale).rounded())
         guard width > 0, height > 0 else { return false }
@@ -150,10 +150,10 @@ final class LiquidGlassRenderer {
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
         context.translateBy(x: -rect.minX, y: -rect.minY)
-        let wasHidden = glass.isHidden
-        glass.isHidden = true
+        let wasHidden = views.map(\.isHidden)
+        views.forEach { $0.isHidden = true }
         source.layer.render(in: context)
-        glass.isHidden = wasHidden
+        zip(views, wasHidden).forEach { $0.isHidden = $1 }
         context.restoreGState()
         CVPixelBufferUnlockBaseAddress(slot.pixelBuffer, [])
 

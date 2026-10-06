@@ -21,7 +21,7 @@ Metal cannot read the pixels behind a view. The obvious alternatives all fall sh
 | `drawHierarchy(in:afterScreenUpdates: false)` | It reads the last committed frame, which already contains the glass, so the glass would refract itself. |
 | `UIGlassEffect` (iOS 26) | It does not exist before iOS 26 and cannot be customized. |
 
-So the view renders a source view it is given (`sourceView`) into a buffer itself.
+So the view renders its source into a buffer itself. The source is `sourceView` when it is set, and the glass's superview otherwise.
 
 ## Frame pipeline
 
@@ -30,7 +30,7 @@ flowchart LR
   tick[MTKView draw] --> springs[Step springs]
   springs --> scale[Apply press scale]
   scale --> needCapture{"Live, dirty, or first frame?"}
-  needCapture -->|yes| capture["Hide glass, sourceView.layer.render into IOSurface buffer"]
+  needCapture -->|yes| capture["Hide glass and views above it, render source into IOSurface buffer"]
   needCapture -->|no| blur
   capture --> blur[MPSImageGaussianBlur]
   blur --> fragment[Glass fragment pass]
@@ -39,9 +39,9 @@ flowchart LR
 
 ### Capture
 
-- The capture rectangle is the glass frame converted into `sourceView` coordinates with `convert(bounds, to:)`, so it follows the press transform. It is outset by `refraction × bezelWidth` points, clipped to `sourceView.bounds` and snapped to the pixel grid.
+- The capture rectangle is the glass frame converted into source coordinates with `convert(bounds, to:)`, so it follows the press transform. It is outset by `refraction × bezelWidth` points, clipped to the source's bounds and snapped to the pixel grid.
 - `layer.render(in:)` ignores a scroll view's `bounds.origin`, so the rectangle stays in content coordinates and the context translates by its origin.
-- The view sets `isHidden = true` on itself, renders and restores. No Core Animation commit happens in between, so nothing flickers.
+- Before rendering, the view hides itself and every visible view stacked above it inside the source. It walks from the glass up to the source and, at each level, takes the siblings after the current view. Without this, a view on top of the glass would be captured and refracted under itself. If the source is not an ancestor (a sibling `sourceView`, for example), only the glass is hidden. Afterwards every view gets its previous `isHidden` back. No Core Animation commit happens in between, so nothing flickers.
 - Pixels go into an IOSurface-backed BGRA `CVPixelBuffer` with a `CGContext` bound to its memory. `CVMetalTextureCache` exposes the same memory as an `MTLTexture`, so nothing is copied.
 - Three buffers rotate. A buffer is reused only once the GPU has finished with it, which an in-flight counter tracks from the command buffer's completion handler. One buffer would let the CPU overwrite a frame the GPU is still reading.
 - Buffers are re-created only when the capture size changes.

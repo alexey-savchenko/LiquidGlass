@@ -81,6 +81,60 @@ final class LiquidGlassTests: XCTestCase {
         XCTAssertEqual(glass.captureRect(), CGRect(x: 90, y: 1090, width: 220, height: 70))
     }
 
+    func testSuperviewIsTheBackdropWhenNoSourceIsSet() {
+        let superview = UIView(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
+        let glass = LiquidGlassView(frame: CGRect(x: 100, y: 100, width: 200, height: 50))
+        glass.style.refraction = 0.5
+        glass.style.bezelWidth = 20
+        superview.addSubview(glass)
+
+        XCTAssertTrue(glass.backdropSource === superview)
+        XCTAssertEqual(glass.captureRect(), CGRect(x: 90, y: 90, width: 220, height: 70))
+    }
+
+    func testCaptureHidesGlassAndVisibleViewsAboveItInsideTheSource() {
+        let superview = UIView()
+        let below = UIView()
+        let glass = LiquidGlassView()
+        let above = UIView()
+        let hiddenAbove = UIView()
+        hiddenAbove.isHidden = true
+        let topmost = UIView()
+        [below, glass, above, hiddenAbove, topmost].forEach(superview.addSubview)
+
+        let hidden = glass.viewsHiddenDuringCapture(of: superview)
+
+        XCTAssertEqual(hidden.map(ObjectIdentifier.init), [glass, above, topmost].map(ObjectIdentifier.init))
+    }
+
+    func testCaptureHidesViewsAboveEveryAncestorUpToTheSource() {
+        let source = UIView()
+        let host = UIView()
+        let glass = LiquidGlassView()
+        let overlayInHost = UIView()
+        let overlayInSource = UIView()
+        host.addSubview(glass)
+        host.addSubview(overlayInHost)
+        source.addSubview(host)
+        source.addSubview(overlayInSource)
+        glass.sourceView = source
+
+        let hidden = glass.viewsHiddenDuringCapture(of: source)
+
+        XCTAssertEqual(hidden.map(ObjectIdentifier.init), [glass, overlayInHost, overlayInSource].map(ObjectIdentifier.init))
+    }
+
+    func testSiblingSourceHidesOnlyTheGlass() {
+        let container = UIView()
+        let source = UIView()
+        let glass = LiquidGlassView()
+        let overlay = UIView()
+        [source, glass, overlay].forEach(container.addSubview)
+        glass.sourceView = source
+
+        XCTAssertEqual(glass.viewsHiddenDuringCapture(of: source).map(ObjectIdentifier.init), [ObjectIdentifier(glass)])
+    }
+
     func testFramesRunOnlyForAttachedLiveOrAnimatingGlass() {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         let glass = LiquidGlassView(frame: CGRect(x: 100, y: 100, width: 200, height: 50))

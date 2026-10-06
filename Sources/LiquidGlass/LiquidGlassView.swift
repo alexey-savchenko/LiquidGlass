@@ -118,8 +118,13 @@ public final class LiquidGlassView: UIControl {
 
     public let contentView = UIView()
 
+    /// The view refracted by the glass. When `nil`, the glass refracts its superview.
     public weak var sourceView: UIView? {
         didSet { setNeedsBackdropUpdate() }
+    }
+
+    var backdropSource: UIView? {
+        sourceView ?? superview
     }
 
     public var style = LiquidGlassStyle.regular {
@@ -211,6 +216,11 @@ public final class LiquidGlassView: UIControl {
         scheduleStaticDraw()
     }
 
+    public override func didMoveToSuperview() {
+        super.didMoveToSuperview()
+        setNeedsBackdropUpdate()
+    }
+
     public override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
@@ -258,7 +268,7 @@ public final class LiquidGlassView: UIControl {
     }
 
     func captureRect() -> CGRect? {
-        guard let source = sourceView, !bounds.isEmpty else { return nil }
+        guard let source = backdropSource, !bounds.isEmpty else { return nil }
         let rect = Self.captureRect(
             glassFrame: convert(bounds, to: source),
             margin: style.captureMargin,
@@ -266,6 +276,20 @@ public final class LiquidGlassView: UIControl {
             scale: pixelScale
         )
         return rect.isNull || rect.isEmpty ? nil : rect
+    }
+
+    /// Everything stacked above the glass inside `source` would otherwise be captured and refracted under itself.
+    func viewsHiddenDuringCapture(of source: UIView) -> [UIView] {
+        guard isDescendant(of: source) else { return [self] }
+        var hidden: [UIView] = [self]
+        var node: UIView = self
+        while node !== source, let parent = node.superview {
+            if let index = parent.subviews.firstIndex(where: { $0 === node }) {
+                hidden += parent.subviews[(index + 1)...].filter { !$0.isHidden }
+            }
+            node = parent
+        }
+        return hidden
     }
 
     static func captureRect(glassFrame: CGRect, margin: CGFloat, sourceBounds: CGRect, scale: CGFloat) -> CGRect {
@@ -380,12 +404,12 @@ extension LiquidGlassView {
     fileprivate func renderFrame(in view: MTKView) {
         stepMotion()
         defer { updateFrameLoop() }
-        guard !usesSolidFill, let renderer, let source = sourceView, let rect = captureRect() else { return }
+        guard !usesSolidFill, let renderer, let source = backdropSource, let rect = captureRect() else { return }
 
         let interval = LiquidGlassRenderer.beginFrameInterval()
         defer { LiquidGlassRenderer.endFrameInterval(interval) }
         if backdrop == .live || isBackdropDirty || !renderer.hasCapture {
-            if renderer.capture(source, rect: rect, scale: pixelScale, blurRadius: style.blurRadius, hiding: self) {
+            if renderer.capture(source, rect: rect, scale: pixelScale, blurRadius: style.blurRadius, hiding: viewsHiddenDuringCapture(of: source)) {
                 isBackdropDirty = false
             }
         }
