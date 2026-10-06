@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "LiquidGlass",
-    platforms: [.iOS(.v18)],
+    platforms: [.iOS(.v17)],
     products: [
         .library(name: "LiquidGlass", targets: ["LiquidGlass"])
     ],

@@ -19,7 +19,7 @@ Metal cannot read the pixels behind a view. The obvious alternatives all fall sh
 | SwiftUI `layerEffect` | It samples only the layer it modifies, so it cannot see UIKit content behind it. |
 | `CABackdropLayer` (private) | It supplies a live backdrop but runs only Core Animation filters, not custom shaders. |
 | `drawHierarchy(in:afterScreenUpdates: false)` | It reads the last committed frame, which already contains the glass, so the glass would refract itself. |
-| `UIGlassEffect` (iOS 26) | It does not exist on iOS 18 and cannot be customized. |
+| `UIGlassEffect` (iOS 26) | It does not exist before iOS 26 and cannot be customized. |
 
 So the view renders a source view it is given (`sourceView`) into a buffer itself.
 

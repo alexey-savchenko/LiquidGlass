@@ -1,6 +1,6 @@
 # LiquidGlass
 
-A liquid glass view for UIKit, rendered with Metal. It refracts whatever is behind it, bends content around its edges, and reacts to touch with a spring. It runs on iOS 18 and later and looks the same on every version, including iOS 26.
+A liquid glass view for UIKit, rendered with Metal. It refracts whatever is behind it, bends content around its edges, and reacts to touch with a spring. It runs on iOS 17 and later and looks the same on every version, including iOS 26.
 
 | Static | Pressed | Live, after scrolling |
 |---|---|---|
@@ -18,7 +18,7 @@ A liquid glass view for UIKit, rendered with Metal. It refracts whatever is behi
 
 ## Requirements
 
-- iOS 18.0+
+- iOS 17.0+. Runs on the iOS 18.6 and 26.5 simulators. iOS 17 builds but has not been run yet.
 - Xcode 16+ (Swift tools 6.0, Swift 5 language mode). Built and tested with Xcode 27.
 
 ## Installation
@@ -95,7 +95,7 @@ glass.style = style
 
 ## Example app
 
-`Example/LiquidGlassExample.xcodeproj` shows a capsule, a card and a circle over a scrolling color grid, with a Live / Static switch. Open it, pick an iOS 18+ simulator and run it. It uses the package from the repository root.
+`Example/LiquidGlassExample.xcodeproj` shows a capsule, a card and a circle over a scrolling color grid, with a Live / Static switch. Open it, pick an iOS 17+ simulator and run it. It uses the package from the repository root.
 
 ## How it works
 
