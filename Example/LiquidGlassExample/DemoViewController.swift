@@ -32,7 +32,7 @@ final class DemoViewController: UIViewController {
 
     private lazy var backdropControl: UISegmentedControl = {
         let control = UISegmentedControl(items: ["Live", "Static"])
-        control.selectedSegmentIndex = 1
+        control.selectedSegmentIndex = 0
         control.addAction(UIAction { [weak self] _ in self?.applyBackdrop() }, for: .valueChanged)
         return control
     }()

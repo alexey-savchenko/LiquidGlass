@@ -135,7 +135,7 @@ public final class LiquidGlassView: UIControl {
         }
     }
 
-    public var backdrop = Backdrop.static {
+    public var backdrop = Backdrop.live {
         didSet {
             guard backdrop != oldValue else { return }
             setNeedsBackdropUpdate()

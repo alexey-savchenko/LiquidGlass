@@ -27,7 +27,7 @@ Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/alexey-savchenko/LiquidGlass.git", from: "1.2.0")
+    .package(url: "https://github.com/alexey-savchenko/LiquidGlass.git", from: "1.3.0")
 ]
 ```
 
@@ -40,7 +40,6 @@ import LiquidGlass
 
 let glass = LiquidGlassView()
 glass.style.shape = .capsule
-glass.backdrop = .live                 // the content behind scrolls
 
 let label = UILabel()
 label.text = "Hold me"
@@ -53,7 +52,7 @@ view.addSubview(glass)                 // above the content it should refract
 Two rules matter.
 
 1. The glass refracts whatever is behind it in its superview. While it captures, it hides itself and every view stacked above it, so it never sees its own output or the views on top of it. To refract a different view, set `sourceView`.
-2. Choose the backdrop to match the content. Use `.live` when the content behind moves. Use `.static` when it does not, and call `setNeedsBackdropUpdate()` after you change that content.
+2. The backdrop is `.live` by default, so the glass follows content that scrolls or animates. Live mode captures on every frame. If the content behind never moves, set `backdrop = .static` to stop that work, and call `setNeedsBackdropUpdate()` after you change the content.
 
 ## Configuration
 
@@ -89,7 +88,7 @@ glass.style = style
 | `contentView` | Container for your labels and icons, drawn above the glass |
 | `sourceView` | Optional weak reference to the view to refract. When `nil` (the default), the glass refracts its superview. |
 | `style` | The `LiquidGlassStyle` in use. Setting it re-renders. |
-| `backdrop` | `.live` or `.static` (the default) |
+| `backdrop` | `.live` (the default) or `.static` |
 | `setNeedsBackdropUpdate()` | Re-capture on the next frame in static mode |
 
 ## Example app

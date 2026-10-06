@@ -138,7 +138,7 @@ final class LiquidGlassTests: XCTestCase {
     func testFramesRunOnlyForAttachedLiveOrAnimatingGlass() {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
         let glass = LiquidGlassView(frame: CGRect(x: 100, y: 100, width: 200, height: 50))
-        glass.backdrop = .live
+        XCTAssertEqual(glass.backdrop, .live)
         XCTAssertFalse(glass.needsFrames)
 
         window.addSubview(glass)
